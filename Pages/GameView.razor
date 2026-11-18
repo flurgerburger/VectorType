@@ -23,7 +23,7 @@
            spellcheck="false" />
 
     <!-- 1. Top HUD Bar -->
-    <Hud Engine="@Engine" Sound="@Sound" />
+    <Hud Engine="@Engine" Sound="@Sound" OnReturnToMenu="@HandleReturnToMenu" />
 
     <!-- 2. Main Game Viewport Canvas -->
     <div class="relative flex-1 w-full overflow-hidden">
@@ -108,11 +108,17 @@
             <div class="bg-[#0b1021] border-2 border-neon-amber/70 rounded-2xl p-6 sm:p-8 max-w-sm w-full text-center shadow-[0_0_40px_rgba(255,183,3,0.3)] flex flex-col gap-4">
                 <span class="text-xs font-mono text-neon-amber uppercase tracking-widest font-bold">GAME PAUSED</span>
                 <h3 class="text-3xl font-black font-orbitron text-white">TACTICAL HOLD</h3>
-                <p class="text-xs text-slate-400 font-mono">Press Escape or click below to resume mission.</p>
-                <button type="button" @onclick="Engine.ResumeGame"
-                        class="w-full py-3 rounded-xl font-orbitron font-bold text-sm bg-neon-amber hover:bg-amber-400 text-slate-950 shadow-[0_0_15px_rgba(255,183,3,0.6)] uppercase transition-all">
-                    RESUME
-                </button>
+                <p class="text-xs text-slate-400 font-mono">Mission suspended.</p>
+                <div class="flex flex-col gap-2.5">
+                    <button type="button" @onclick="Engine.ResumeGame"
+                            class="w-full py-3 rounded-xl font-orbitron font-bold text-sm bg-neon-amber hover:bg-amber-400 text-slate-950 shadow-[0_0_15px_rgba(255,183,3,0.6)] uppercase transition-all">
+                        RESUME MISSION
+                    </button>
+                    <button type="button" @onclick="HandleReturnToMenu"
+                            class="w-full py-3 rounded-xl font-mono font-bold text-xs bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-red-500/60 text-slate-300 hover:text-red-400 uppercase tracking-wider transition-all">
+                        RETURN TO MAIN MENU
+                    </button>
+                </div>
             </div>
         </div>
     }
@@ -181,26 +187,20 @@
         await FocusInputAsync();
     }
 
-    private void HandleReturnToMenu()
+    private async Task HandleReturnToMenu()
     {
-        // Cancel game and return to ready state
-        _ = Engine.DisposeAsync();
-        // Force refresh or restart in ready state
-        Engine.UntargetCurrentEnemy();
+        await Engine.ReturnToMainMenuAsync();
+        await FocusInputAsync();
     }
 
     private async Task HandleKeyDown(KeyboardEventArgs e)
     {
-        // 1. Handle Pause / Resume toggle via Escape
+        // 1. 'esc' key just pauses the game (no other use case)
         if (e.Key == "Escape")
         {
             if (Engine.State is GameState.Playing or GameState.BossFight)
             {
                 Engine.PauseGame();
-            }
-            else if (Engine.State is GameState.Paused)
-            {
-                Engine.ResumeGame();
             }
             return;
         }

@@ -129,21 +129,39 @@ public class GameEngine : IAsyncDisposable
         }
     }
 
+    public async Task ReturnToMainMenuAsync()
+    {
+        await StopGameLoopAsync();
+        _enemies.Clear();
+        _particles.Clear();
+        _lasers.Clear();
+        TargetEnemy = null;
+        CurrentBoss = null;
+        ScreenShakeTimer = 0;
+        State = GameState.Ready;
+        NotifyStateChanged();
+    }
+
     private int CalculateEnemiesForWave(int wave) => Mode switch
     {
         GameMode.Normal => wave switch
         {
-            1 => 6,
-            2 => 10,
-            _ => 14
+            1 => 8,
+            2 => 14,
+            _ => 20
         },
-        GameMode.Endless => 6 + (wave * 3),
-        _ => 8
+        GameMode.Endless => 8 + (wave * 4),
+        _ => 10
     };
+
+    private int GetMaxConcurrentEnemies()
+    {
+        return Config.MaxConcurrentEnemies + Math.Min(4, CurrentWave - 1);
+    }
 
     private double GetCurrentSpawnInterval()
     {
-        double reduction = (CurrentWave - 1) * 0.15;
+        double reduction = (CurrentWave - 1) * 0.12;
         return Math.Max(Config.MinSpawnIntervalSeconds, Config.SpawnIntervalSeconds - reduction);
     }
 
@@ -228,7 +246,7 @@ public class GameEngine : IAsyncDisposable
         double interval = GetCurrentSpawnInterval();
 
         if (SpawnTimer >= interval && 
-            _enemies.Count < Config.MaxConcurrentEnemies && 
+            _enemies.Count < GetMaxConcurrentEnemies() && 
             (Mode == GameMode.Endless || EnemiesSpawnedInWave < TotalEnemiesInWave))
         {
             SpawnTimer = 0;
@@ -392,26 +410,26 @@ public class GameEngine : IAsyncDisposable
         var activeWords = _enemies.Select(e => e.Word).ToList();
         string word = _wordBank.GetWord(Difficulty, type, activeWords);
 
-        // Distribute horizontally across 6 lanes (12%, 26%, 40%, 54%, 68%, 82%)
-        int lane = _rnd.Next(6);
-        double posX = 12.0 + (lane * 14.0) + (_rnd.NextDouble() * 4.0 - 2.0);
+        // Distribute horizontally across 7 lanes (11%, 23%, 35%, 47%, 59%, 71%, 83%)
+        int lane = _rnd.Next(7);
+        double posX = 11.0 + (lane * 12.0) + (_rnd.NextDouble() * 3.0 - 1.5);
 
         double speed = GetCurrentSpeed();
         int basePoints = 100;
 
         if (type == EnemyType.Scout)
         {
-            speed *= 1.35;
+            speed *= 1.18;
             basePoints = 150;
         }
         else if (type == EnemyType.Cruiser)
         {
-            speed *= 0.75;
+            speed *= 0.88;
             basePoints = 250;
         }
         else if (type == EnemyType.Glitch)
         {
-            speed *= 1.1;
+            speed *= 1.05;
             basePoints = 200;
         }
 

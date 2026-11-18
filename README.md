@@ -88,11 +88,11 @@ VectorType/
 - **Boss (`BossEnemy`)**: Flagship dreadnought containing structured word queues and sentence progression tracking.
 
 ### 3. Difficulty Tuning Matrix
-| Difficulty | Velocity | Word Length | Boss Timer | Base Hull / Shield | Score Multiplier |
+| Difficulty | Velocity | Spawn Cadence | Word Length | Base Hull / Shield | Score Multiplier |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Easy** | 3.2 – 7.0 %/s | 3 – 5 chars | 55 sec | 120 / 60 | 1.0x |
-| **Medium** | 4.8 – 11.0 %/s | 4 – 8 chars | 40 sec | 100 / 50 | 1.5x |
-| **Hard** | 7.0 – 16.0 %/s | 6 – 12 chars | 28 sec | 80 / 30 | 2.2x |
+| **Easy** | 2.6 – 4.2 %/s | 1.9s down to 1.1s (6 concurrent) | 3 – 5 chars | 120 / 60 | 1.0x |
+| **Medium** | 3.4 – 5.2 %/s | 1.3s down to 0.7s (8 concurrent) | 4 – 8 chars | 100 / 50 | 1.5x |
+| **Hard** | 4.2 – 6.4 %/s | 0.95s down to 0.45s (11 concurrent) | 6 – 12 chars | 80 / 30 | 2.2x |
 
 ### 4. Client-Side Web Audio Synthesizer (`vector-audio.js`)
 Zero external MP3/WAV dependencies! Uses native browser `AudioContext` to generate:
@@ -129,7 +129,8 @@ Zero external MP3/WAV dependencies! Uses native browser `AudioContext` to genera
 - **Keystrokes `A`–`Z`**: Automatically locks onto and neutralizes targeted enemies.
 - **`Space`**: Advances words in boss sentence sequences.
 - **`Backspace`**: Releases target lock to switch to another incoming hostile.
-- **`Escape`**: Pauses and resumes tactical hold.
+- **`Escape`**: Pauses the game (exclusively used for pausing).
+- **Return to Main Menu**: Available in the pause overlay and top HUD at any time.
 
 ---
 

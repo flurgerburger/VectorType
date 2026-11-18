@@ -3,12 +3,12 @@ namespace VectorType.Models;
 public class DifficultyConfig
 {
     public Difficulty Difficulty { get; init; }
-    public double BaseSpeed { get; init; } = 4.5; // percentage units per second
-    public double MaxSpeed { get; init; } = 12.0;
-    public double SpeedScalingPerWave { get; init; } = 0.4;
-    public double SpawnIntervalSeconds { get; init; } = 2.8;
-    public double MinSpawnIntervalSeconds { get; init; } = 1.1;
-    public int MaxConcurrentEnemies { get; init; } = 5;
+    public double BaseSpeed { get; init; } = 3.4; // percentage units per second (moderate, readable velocity)
+    public double MaxSpeed { get; init; } = 5.2;
+    public double SpeedScalingPerWave { get; init; } = 0.12;
+    public double SpawnIntervalSeconds { get; init; } = 1.3; // High-frequency spawning
+    public double MinSpawnIntervalSeconds { get; init; } = 0.7;
+    public int MaxConcurrentEnemies { get; init; } = 8;
     public int MinWordLength { get; init; } = 3;
     public int MaxWordLength { get; init; } = 6;
     public double BossTimeLimitSeconds { get; init; } = 45.0;
@@ -21,12 +21,12 @@ public class DifficultyConfig
         Difficulty.Easy => new DifficultyConfig
         {
             Difficulty = Difficulty.Easy,
-            BaseSpeed = 3.2,
-            MaxSpeed = 7.0,
-            SpeedScalingPerWave = 0.25,
-            SpawnIntervalSeconds = 3.4,
-            MinSpawnIntervalSeconds = 1.8,
-            MaxConcurrentEnemies = 4,
+            BaseSpeed = 2.6,
+            MaxSpeed = 4.2,
+            SpeedScalingPerWave = 0.1,
+            SpawnIntervalSeconds = 1.9,
+            MinSpawnIntervalSeconds = 1.1,
+            MaxConcurrentEnemies = 6,
             MinWordLength = 3,
             MaxWordLength = 5,
             BossTimeLimitSeconds = 55.0,
@@ -37,12 +37,12 @@ public class DifficultyConfig
         Difficulty.Medium => new DifficultyConfig
         {
             Difficulty = Difficulty.Medium,
-            BaseSpeed = 4.8,
-            MaxSpeed = 11.0,
-            SpeedScalingPerWave = 0.45,
-            SpawnIntervalSeconds = 2.4,
-            MinSpawnIntervalSeconds = 1.2,
-            MaxConcurrentEnemies = 6,
+            BaseSpeed = 3.4,
+            MaxSpeed = 5.2,
+            SpeedScalingPerWave = 0.12,
+            SpawnIntervalSeconds = 1.3,
+            MinSpawnIntervalSeconds = 0.7,
+            MaxConcurrentEnemies = 8,
             MinWordLength = 4,
             MaxWordLength = 8,
             BossTimeLimitSeconds = 40.0,
@@ -53,12 +53,12 @@ public class DifficultyConfig
         Difficulty.Hard => new DifficultyConfig
         {
             Difficulty = Difficulty.Hard,
-            BaseSpeed = 7.0,
-            MaxSpeed = 16.0,
-            SpeedScalingPerWave = 0.7,
-            SpawnIntervalSeconds = 1.7,
-            MinSpawnIntervalSeconds = 0.8,
-            MaxConcurrentEnemies = 8,
+            BaseSpeed = 4.2,
+            MaxSpeed = 6.4,
+            SpeedScalingPerWave = 0.15,
+            SpawnIntervalSeconds = 0.95,
+            MinSpawnIntervalSeconds = 0.45,
+            MaxConcurrentEnemies = 11,
             MinWordLength = 6,
             MaxWordLength = 12,
             BossTimeLimitSeconds = 28.0,

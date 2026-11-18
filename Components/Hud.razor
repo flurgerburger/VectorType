@@ -131,9 +131,18 @@
             else if (Engine.State is GameState.Paused)
             {
                 <button @onclick="Engine.ResumeGame" 
-                        title="Resume Game (Esc)"
+                        title="Resume Game"
                         class="p-2 rounded-lg bg-neon-cyan/20 hover:bg-neon-cyan/30 border border-neon-cyan text-neon-cyan transition-colors animate-pulse">
                     <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                </button>
+            }
+
+            @if (Engine.State is GameState.Playing or GameState.BossFight or GameState.Paused)
+            {
+                <button @onclick="() => OnReturnToMenu.InvokeAsync()" 
+                        title="Return to Main Menu"
+                        class="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-600 text-slate-300 hover:text-red-400 transition-colors">
+                    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
                 </button>
             }
         </div>
@@ -143,6 +152,7 @@
 @code {
     [Parameter, EditorRequired] public required GameEngine Engine { get; set; }
     [Parameter, EditorRequired] public required ISoundService Sound { get; set; }
+    [Parameter] public EventCallback OnReturnToMenu { get; set; }
 
     private async Task ToggleAudio()
     {
