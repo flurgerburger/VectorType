@@ -1,0 +1,151 @@
+@using VectorType.Models
+@using VectorType.Services
+
+<div class="w-full bg-[#080d1e]/85 backdrop-blur-md border-b border-neon-cyan/30 px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-sm z-30 select-none shadow-[0_4px_25px_rgba(0,240,255,0.12)]">
+    <!-- Left: Score, Combo & WPM -->
+    <div class="flex items-center gap-4 sm:gap-6">
+        <!-- Score -->
+        <div class="flex flex-col">
+            <span class="text-[10px] uppercase tracking-widest text-slate-400 font-mono">Score</span>
+            <div class="text-xl sm:text-2xl font-black font-orbitron text-transparent bg-clip-text bg-gradient-to-r from-neon-cyan to-white drop-shadow-[0_0_8px_rgba(0,240,255,0.8)]">
+                @Engine.Stats.Score.ToString("N0")
+            </div>
+        </div>
+
+        <!-- Combo Multiplier -->
+        <div class="flex flex-col">
+            <span class="text-[10px] uppercase tracking-widest text-slate-400 font-mono">Streak</span>
+            <div class="flex items-center gap-1.5">
+                <span class="font-orbitron font-bold text-lg @(Engine.Stats.Combo >= 10 ? "text-neon-pink animate-pulse" : "text-neon-amber")">
+                    @Engine.Stats.Combo<span class="text-xs">x</span>
+                </span>
+                @if (Engine.Stats.ComboMultiplier > 1.0)
+                {
+                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold font-orbitron bg-neon-pink/20 text-neon-pink border border-neon-pink/50 shadow-[0_0_6px_rgba(255,0,127,0.5)]">
+                        @(Engine.Stats.ComboMultiplier)x MULTI
+                    </span>
+                }
+            </div>
+        </div>
+
+        <!-- Live WPM & Accuracy -->
+        <div class="hidden md:flex items-center gap-4 border-l border-slate-700/60 pl-4">
+            <div class="flex flex-col">
+                <span class="text-[10px] uppercase tracking-widest text-slate-400 font-mono">Speed</span>
+                <span class="font-orbitron font-bold text-base text-neon-green">
+                    @Engine.Stats.CurrentWpm <span class="text-[10px] text-slate-400 font-mono">WPM</span>
+                </span>
+            </div>
+            <div class="flex flex-col">
+                <span class="text-[10px] uppercase tracking-widest text-slate-400 font-mono">Accuracy</span>
+                <span class="font-orbitron font-bold text-base text-neon-cyan">
+                    @Engine.Stats.Accuracy.ToString("F1")<span class="text-xs">%</span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Center: Mode & Wave Status -->
+    <div class="flex flex-col items-center">
+        <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono tracking-widest font-bold uppercase @(Engine.Mode == GameMode.Normal ? "bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/40" : "bg-neon-purple/20 text-neon-purple border border-neon-purple/40")">
+                @Engine.Mode Mode
+            </span>
+            <span class="text-xs font-mono text-slate-400 tracking-wider">
+                DIFF: <span class="font-bold @(Engine.Difficulty switch { Difficulty.Easy => "text-neon-green", Difficulty.Medium => "text-neon-amber", Difficulty.Hard => "text-neon-pink", _ => "text-white" })">@Engine.Difficulty</span>
+            </span>
+        </div>
+        <div class="font-orbitron font-extrabold text-sm tracking-wider mt-0.5 text-slate-200">
+            @if (Engine.State == GameState.BossFight)
+            {
+                <span class="text-neon-pink animate-pulse flex items-center gap-1">
+                    <span class="inline-block w-2 h-2 rounded-full bg-neon-pink animate-ping"></span>
+                    BOSS ENCOUNTER
+                </span>
+            }
+            else if (Engine.Mode == GameMode.Normal)
+            {
+                <span>WAVE @Engine.CurrentWave / @Engine.TotalNormalWaves</span>
+            }
+            else
+            {
+                <span>WAVE @Engine.CurrentWave (ENDLESS)</span>
+            }
+        </div>
+    </div>
+
+    <!-- Right: Health & Shields + Controls -->
+    <div class="flex items-center gap-4 sm:gap-6">
+        <!-- Shield & Health Meters -->
+        <div class="flex flex-col gap-1 w-32 sm:w-40">
+            <!-- Shield Bar -->
+            <div class="flex items-center justify-between text-[10px] font-mono">
+                <span class="text-neon-cyan flex items-center gap-1">
+                    <svg class="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+                    SHIELD
+                </span>
+                <span class="text-neon-cyan font-bold">@Engine.PlayerShield / @Engine.PlayerMaxShield</span>
+            </div>
+            <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden border border-neon-cyan/30">
+                <div class="h-full bg-gradient-to-r from-cyan-400 to-neon-cyan transition-all duration-200 shadow-[0_0_8px_rgba(0,240,255,0.7)]" 
+                     style="width: @((double)Engine.PlayerShield / Math.Max(1, Engine.PlayerMaxShield) * 100)%"></div>
+            </div>
+
+            <!-- Health Bar -->
+            <div class="flex items-center justify-between text-[10px] font-mono mt-0.5">
+                <span class="text-neon-green flex items-center gap-1">
+                    <svg class="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                    HULL
+                </span>
+                <span class="text-neon-green font-bold">@Engine.PlayerHealth / @Engine.PlayerMaxHealth</span>
+            </div>
+            <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden border border-neon-green/30">
+                <div class="h-full bg-gradient-to-r from-emerald-400 to-neon-green transition-all duration-200 shadow-[0_0_8px_rgba(0,255,102,0.7)]" 
+                     style="width: @((double)Engine.PlayerHealth / Math.Max(1, Engine.PlayerMaxHealth) * 100)%"></div>
+            </div>
+        </div>
+
+        <!-- Action Buttons: Audio Mute & Pause -->
+        <div class="flex items-center gap-2">
+            <button @onclick="ToggleAudio" 
+                    title="@(Sound.IsMuted ? "Unmute Audio" : "Mute Audio")"
+                    class="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-600 text-slate-300 hover:text-neon-cyan transition-colors">
+                @if (Sound.IsMuted)
+                {
+                    <svg class="w-4 h-4 fill-current text-slate-400" viewBox="0 0 24 24"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
+                }
+                else
+                {
+                    <svg class="w-4 h-4 fill-current text-neon-cyan" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                }
+            </button>
+
+            @if (Engine.State is GameState.Playing or GameState.BossFight)
+            {
+                <button @onclick="Engine.PauseGame" 
+                        title="Pause Game (Esc)"
+                        class="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-600 text-slate-300 hover:text-neon-amber transition-colors">
+                    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                </button>
+            }
+            else if (Engine.State is GameState.Paused)
+            {
+                <button @onclick="Engine.ResumeGame" 
+                        title="Resume Game (Esc)"
+                        class="p-2 rounded-lg bg-neon-cyan/20 hover:bg-neon-cyan/30 border border-neon-cyan text-neon-cyan transition-colors animate-pulse">
+                    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                </button>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public required GameEngine Engine { get; set; }
+    [Parameter, EditorRequired] public required ISoundService Sound { get; set; }
+
+    private async Task ToggleAudio()
+    {
+        await Sound.ToggleMuteAsync();
+    }
+}

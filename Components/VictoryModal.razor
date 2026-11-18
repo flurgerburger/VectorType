@@ -1,0 +1,112 @@
+@using VectorType.Models
+@using VectorType.Services
+
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#05070f]/90 backdrop-blur-md select-none">
+    <div class="w-full max-w-lg bg-[#081524]/95 border-2 border-neon-cyan rounded-2xl p-6 sm:p-8 shadow-[0_0_70px_rgba(0,240,255,0.4)] flex flex-col gap-6 relative animate-in fade-in zoom-in-95 duration-200">
+        
+        <!-- Header -->
+        <div class="text-center flex flex-col items-center">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neon-cyan/15 border border-neon-cyan/40 text-xs font-mono tracking-widest text-neon-cyan uppercase mb-2">
+                <span class="w-2 h-2 rounded-full bg-neon-green animate-ping"></span>
+                SECTOR DEFENSE RESTORED
+            </div>
+            <h2 class="text-4xl font-black font-orbitron tracking-widest uppercase text-transparent bg-clip-text bg-gradient-to-r from-neon-green via-neon-cyan to-white drop-shadow-[0_0_20px_rgba(0,240,255,0.8)]">
+                VICTORY ACHIEVED
+            </h2>
+            <p class="text-slate-300 font-mono text-xs mt-1">
+                The Rogue Core has been neutralized. System firewall restored to 100%.
+            </p>
+        </div>
+
+        <!-- Grade Rank Banner -->
+        <div class="flex items-center justify-center gap-4 bg-gradient-to-r from-neon-cyan/10 via-neon-cyan/20 to-neon-cyan/10 border border-neon-cyan/30 rounded-xl p-4">
+            <div class="text-center">
+                <span class="text-[10px] font-mono text-slate-400 uppercase tracking-widest block">Operational Rank</span>
+                <span class="text-5xl font-black font-orbitron text-transparent bg-clip-text bg-gradient-to-br from-yellow-300 via-amber-400 to-neon-cyan drop-shadow-[0_0_15px_rgba(255,183,3,0.8)]">
+                    @CalculateRank()
+                </span>
+            </div>
+        </div>
+
+        <!-- Performance Stats Matrix -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-slate-950/80 border border-slate-800 rounded-xl p-4 font-mono">
+            <!-- Final Score -->
+            <div class="col-span-2 sm:col-span-3 text-center border-b border-slate-800 pb-3">
+                <span class="text-[10px] uppercase tracking-widest text-slate-500 block">Total Score</span>
+                <span class="text-3xl font-black font-orbitron text-transparent bg-clip-text bg-gradient-to-r from-neon-cyan via-white to-neon-pink">
+                    @Engine.Stats.Score.ToString("N0")
+                </span>
+            </div>
+
+            <!-- Accuracy -->
+            <div class="flex flex-col items-center p-2 rounded bg-slate-900/40">
+                <span class="text-[10px] text-slate-500 uppercase">Accuracy</span>
+                <span class="text-lg font-bold text-neon-cyan font-orbitron">@Engine.Stats.Accuracy.ToString("F1")%</span>
+            </div>
+
+            <!-- Peak WPM -->
+            <div class="flex flex-col items-center p-2 rounded bg-slate-900/40">
+                <span class="text-[10px] text-slate-500 uppercase">Peak WPM</span>
+                <span class="text-lg font-bold text-neon-green font-orbitron">@Engine.Stats.PeakWpm</span>
+            </div>
+
+            <!-- Max Combo -->
+            <div class="flex flex-col items-center p-2 rounded bg-slate-900/40">
+                <span class="text-[10px] text-slate-500 uppercase">Max Streak</span>
+                <span class="text-lg font-bold text-neon-pink font-orbitron">@Engine.Stats.MaxCombo<span class="text-xs">x</span></span>
+            </div>
+
+            <!-- Words Neutralized -->
+            <div class="flex flex-col items-center p-2 rounded bg-slate-900/40">
+                <span class="text-[10px] text-slate-500 uppercase">Enemies Purged</span>
+                <span class="text-lg font-bold text-slate-200 font-orbitron">@Engine.Stats.WordsCompleted</span>
+            </div>
+
+            <!-- Bosses Neutralized -->
+            <div class="flex flex-col items-center p-2 rounded bg-slate-900/40">
+                <span class="text-[10px] text-slate-500 uppercase">Boss Neutralized</span>
+                <span class="text-lg font-bold text-neon-amber font-orbitron">@Engine.Stats.BossesDefeated</span>
+            </div>
+
+            <!-- Mission Time -->
+            <div class="flex flex-col items-center p-2 rounded bg-slate-900/40">
+                <span class="text-[10px] text-slate-500 uppercase">Time Elapsed</span>
+                <span class="text-lg font-bold text-slate-300 font-orbitron">@((int)Engine.Stats.ElapsedSeconds)s</span>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row gap-3">
+            <button type="button" @onclick="OnRestartClicked"
+                    class="flex-1 py-3 px-4 rounded-xl font-orbitron font-bold text-sm tracking-wider uppercase bg-gradient-to-r from-neon-cyan to-blue-600 hover:from-white hover:to-neon-cyan text-slate-950 shadow-[0_0_20px_rgba(0,240,255,0.6)] transition-all text-center">
+                PLAY AGAIN
+            </button>
+            <button type="button" @onclick="OnChangeDifficultyClicked"
+                    class="py-3 px-4 rounded-xl font-mono text-sm tracking-wider uppercase bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 transition-all text-center">
+                MAIN MENU
+            </button>
+        </div>
+
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public required GameEngine Engine { get; set; }
+    [Parameter] public EventCallback OnRestart { get; set; }
+    [Parameter] public EventCallback OnChangeDifficulty { get; set; }
+
+    private string CalculateRank()
+    {
+        double acc = Engine.Stats.Accuracy;
+        double wpm = Engine.Stats.CurrentWpm;
+
+        if (acc >= 96.0 && wpm >= 65.0) return "S+ RANK";
+        if (acc >= 92.0 && wpm >= 50.0) return "S RANK";
+        if (acc >= 85.0 && wpm >= 38.0) return "A RANK";
+        if (acc >= 75.0) return "B RANK";
+        return "C RANK";
+    }
+
+    private async Task OnRestartClicked() => await OnRestart.InvokeAsync();
+    private async Task OnChangeDifficultyClicked() => await OnChangeDifficulty.InvokeAsync();
+}

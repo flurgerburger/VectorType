@@ -1,0 +1,117 @@
+@using VectorType.Models
+
+<div class="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none transition-transform duration-75 select-none"
+     style="left: @(Enemy.X)%; top: @(Enemy.Y)%;">
+
+    <!-- Danger Alert Aura if close to perimeter (Y > 72%) -->
+    @if (Enemy.Y > 72.0)
+    {
+        <div class="absolute -inset-4 rounded-full border-2 border-red-500/80 animate-ping pointer-events-none"></div>
+    }
+
+    <!-- Enemy Ship Vector Graphic -->
+    <div class="relative w-12 h-12 flex items-center justify-center drop-shadow-[0_0_10px_var(--enemy-color)]"
+         style="--enemy-color: @GetEnemyColor(Enemy.Type)">
+        
+        @switch (Enemy.Type)
+        {
+            case EnemyType.Scout:
+                <!-- Sleek arrow / dart scout -->
+                <svg viewBox="0 0 40 40" class="w-10 h-10 transform rotate-180">
+                    <polygon points="20,4 36,36 20,28 4,36" fill="none" stroke="#00f0ff" stroke-width="2.5" stroke-linejoin="round" />
+                    <line x1="20" y1="12" x2="20" y2="28" stroke="#00f0ff" stroke-width="2" />
+                    <circle cx="20" cy="20" r="3" fill="#00f0ff" />
+                </svg>
+                break;
+
+            case EnemyType.Drone:
+                <!-- Hexagonal / Diamond standard drone -->
+                <svg viewBox="0 0 40 40" class="w-10 h-10">
+                    <polygon points="20,2 38,15 38,28 20,38 2,28 2,15" fill="none" stroke="#ffb703" stroke-width="2.5" stroke-linejoin="round" />
+                    <polygon points="20,10 30,20 20,30 10,20" fill="#ffb703" fill-opacity="0.3" stroke="#ffb703" stroke-width="1.5" />
+                    <circle cx="20" cy="20" r="3.5" fill="#ffffff" />
+                </svg>
+                break;
+
+            case EnemyType.Cruiser:
+                <!-- Heavy armored cruiser -->
+                <svg viewBox="0 0 44 44" class="w-12 h-12">
+                    <polygon points="22,2 42,12 36,38 22,42 8,38 2,12" fill="none" stroke="#ff007f" stroke-width="2.5" stroke-linejoin="round" />
+                    <line x1="22" y1="2" x2="22" y2="42" stroke="#ff007f" stroke-width="1.5" />
+                    <rect x="14" y="14" width="16" height="16" fill="#ff007f" fill-opacity="0.25" stroke="#ff007f" stroke-width="1.5" />
+                    <circle cx="22" cy="22" r="4" fill="#ffffff" />
+                </svg>
+                break;
+
+            case EnemyType.Glitch:
+                <!-- Erratically shifting matrix drone -->
+                <svg viewBox="0 0 40 40" class="w-10 h-10 animate-pulse">
+                    <rect x="6" y="6" width="28" height="28" fill="none" stroke="#00ff66" stroke-width="2" stroke-dasharray="4,2" />
+                    <polygon points="20,6 34,20 20,34 6,20" fill="#00ff66" fill-opacity="0.2" stroke="#00ff66" stroke-width="2" />
+                    <circle cx="20" cy="20" r="3" fill="#00ff66" />
+                </svg>
+                break;
+        }
+
+        <!-- Target Lock Reticle Brackets -->
+        @if (Enemy.IsTargeted)
+        {
+            <div class="absolute -inset-2 border-2 border-neon-cyan/90 rounded pointer-events-none animate-pulse shadow-[0_0_12px_rgba(0,240,255,0.8)]">
+                <!-- Reticle corner notches -->
+                <span class="absolute -top-1 -left-1 w-2 h-2 border-t-2 border-l-2 border-white"></span>
+                <span class="absolute -top-1 -right-1 w-2 h-2 border-t-2 border-r-2 border-white"></span>
+                <span class="absolute -bottom-1 -left-1 w-2 h-2 border-b-2 border-l-2 border-white"></span>
+                <span class="absolute -bottom-1 -right-1 w-2 h-2 border-b-2 border-r-2 border-white"></span>
+            </div>
+        }
+    </div>
+
+    <!-- Word Capsule Badge with Character Highlights -->
+    <div class="mt-1 px-2.5 py-0.5 rounded font-mono font-bold text-xs tracking-wider border backdrop-blur-md shadow-lg transition-all
+                @(Enemy.IsTargeted 
+                    ? "bg-[#09152b]/95 border-neon-cyan shadow-[0_0_14px_rgba(0,240,255,0.7)] scale-110" 
+                    : Enemy.Y > 72.0 
+                        ? "bg-red-950/90 border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)] text-red-200" 
+                        : "bg-slate-900/85 border-slate-700 text-slate-300")">
+        
+        @if (Enemy.TypedProgress > 0)
+        {
+            <!-- Already typed letters in neon green with glow -->
+            <span class="text-neon-green font-black drop-shadow-[0_0_6px_rgba(0,255,102,0.9)]">@Enemy.TypedSubstring</span>
+        }
+
+        @if (Enemy.NextChar != null)
+        {
+            <!-- Next expected letter with underline & neon pulse -->
+            <span class="text-white underline decoration-neon-cyan decoration-2 font-black drop-shadow-[0_0_8px_rgba(255,255,255,1)]">@Enemy.NextChar</span>
+        }
+
+        @if (Enemy.RemainingSubstring.Length > 1)
+        {
+            <!-- Remaining letters in dim/standard color -->
+            <span class="text-slate-400">@Enemy.RemainingSubstring[1..]</span>
+        }
+    </div>
+
+    <!-- Threat / Distance Warning Meter when dangerously close -->
+    @if (Enemy.Y > 72.0)
+    {
+        <div class="mt-0.5 text-[9px] font-mono font-extrabold uppercase text-red-400 tracking-widest flex items-center gap-1 animate-pulse">
+            <svg class="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+            CRITICAL
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public required Enemy Enemy { get; set; }
+
+    private static string GetEnemyColor(EnemyType type) => type switch
+    {
+        EnemyType.Scout => "#00f0ff",
+        EnemyType.Drone => "#ffb703",
+        EnemyType.Cruiser => "#ff007f",
+        EnemyType.Glitch => "#00ff66",
+        _ => "#00f0ff"
+    };
+}

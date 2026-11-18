@@ -1,0 +1,56 @@
+@using VectorType.Models
+
+<svg class="absolute inset-0 w-full h-full pointer-events-none z-10 overflow-hidden"
+     viewBox="0 0 100 100" preserveAspectRatio="none">
+    <defs>
+        <!-- Laser Glow Filters -->
+        <filter id="laser-glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="0.8" result="blur" />
+            <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+            </feMerge>
+        </filter>
+        <linearGradient id="shield-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#00f0ff" stop-opacity="0.1" />
+            <stop offset="50%" stop-color="#00f0ff" stop-opacity="0.8" />
+            <stop offset="100%" stop-color="#00f0ff" stop-opacity="0.1" />
+        </linearGradient>
+    </defs>
+
+    <!-- Defense Perimeter Boundary Grid Line at Y = 88% -->
+    <line x1="0" y1="88" x2="100" y2="88" stroke="url(#shield-gradient)" stroke-width="0.8" stroke-dasharray="2,1" />
+    <line x1="0" y1="88" x2="100" y2="88" stroke="#00f0ff" stroke-width="0.3" opacity="0.9" />
+
+    <!-- Active Laser Beams -->
+    @foreach (var laser in Lasers)
+    {
+        <!-- Outer glow beam -->
+        <line x1="@laser.StartX" y1="@laser.StartY" x2="@laser.TargetX" y2="@laser.TargetY"
+              stroke="@laser.Color" stroke-width="1.2" opacity="@(laser.Opacity * 0.7)"
+              filter="url(#laser-glow)" />
+        
+        <!-- Bright core beam -->
+        <line x1="@laser.StartX" y1="@laser.StartY" x2="@laser.TargetX" y2="@laser.TargetY"
+              stroke="#ffffff" stroke-width="0.4" opacity="@laser.Opacity" />
+    }
+
+    <!-- Exploding Spark Particles -->
+    @foreach (var p in Particles)
+    {
+        @if (!string.IsNullOrEmpty(p.TextChar))
+        {
+            @((MarkupString)$"<text x='{p.X}' y='{p.Y}' fill='{p.Color}' font-size='{p.Size}' font-family='\"Share Tech Mono\", monospace' opacity='{p.Opacity}' text-anchor='middle' dominant-baseline='central'>{p.TextChar}</text>")
+        }
+        else
+        {
+            <circle cx="@p.X" cy="@p.Y" r="@(p.Size * 0.2)" fill="@p.Color" opacity="@p.Opacity" />
+        }
+    }
+</svg>
+
+@code {
+    [Parameter, EditorRequired] public required IReadOnlyList<LaserBeam> Lasers { get; set; }
+    [Parameter, EditorRequired] public required IReadOnlyList<Particle> Particles { get; set; }
+}

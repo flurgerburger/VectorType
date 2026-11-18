@@ -65,6 +65,21 @@
 
     <!-- Web Audio Synthesizer Script -->
     <script src="js/vector-audio.js"></script>
+    <script>
+        window.focusElement = function (el) {
+            if (el && typeof el.focus === 'function') {
+                el.focus();
+            }
+        };
+
+        // Auto-refocus typing input on document click
+        document.addEventListener('click', function () {
+            const input = document.querySelector('input');
+            if (input) {
+                input.focus();
+            }
+        });
+    </script>
     <script src="_framework/blazor.webassembly.js"></script>
 </body>
 

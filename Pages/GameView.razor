@@ -1,0 +1,228 @@
+@page "/"
+@page "/game"
+@using VectorType.Models
+@using VectorType.Services
+@using VectorType.Components
+@inject GameEngine Engine
+@inject ISoundService Sound
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<div class="relative w-screen h-screen overflow-hidden bg-[#05070f] font-mono select-none flex flex-col @(Engine.IsScreenShaking ? "animate-shake" : "")"
+     tabindex="0"
+     @ref="_gameContainer"
+     @onkeydown="HandleKeyDown"
+     @onclick="FocusInputAsync">
+
+    <!-- Hidden autofocus input element to ensure reliable mobile & desktop keystroke capture -->
+    <input @ref="_keystrokeInput"
+           class="absolute -top-96 left-0 opacity-0 pointer-events-none w-1 h-1"
+           autocomplete="off"
+           autocorrect="off"
+           autocapitalize="off"
+           spellcheck="false" />
+
+    <!-- 1. Top HUD Bar -->
+    <Hud Engine="@Engine" Sound="@Sound" />
+
+    <!-- 2. Main Game Viewport Canvas -->
+    <div class="relative flex-1 w-full overflow-hidden">
+        
+        <!-- Animated Synthwave Vector Background Grid -->
+        <div class="absolute inset-0 vector-starfield opacity-40 pointer-events-none"></div>
+        <div class="absolute inset-0 vector-grid-floor opacity-30 pointer-events-none"></div>
+
+        <!-- Danger Proximity Flash Vignette (when enemies approach defense line) -->
+        @if (Engine.DangerWarningIntensity > 0)
+        {
+            <div class="absolute inset-0 pointer-events-none z-10 transition-opacity duration-150 border-4 border-red-500/60 shadow-[inset_0_0_80px_rgba(239,68,68,0.5)]"
+                 style="opacity: @(Engine.DangerWarningIntensity)">
+                <!-- Danger Warning Ribbon -->
+                <div class="absolute top-2 left-1/2 -translate-x-1/2 px-4 py-1 rounded bg-red-600/80 text-white font-orbitron font-black text-xs tracking-widest uppercase animate-bounce flex items-center gap-2">
+                    <svg class="w-4 h-4 fill-current animate-ping" viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+                    WARNING: PERIMETER BREACH IMMINENT
+                </div>
+            </div>
+        }
+
+        <!-- Laser Beams & Particle Explosions Canvas -->
+        <ParticleCanvas Lasers="@Engine.Lasers" Particles="@Engine.Particles" />
+
+        <!-- Normal Enemies on Screen -->
+        @if (Engine.State is GameState.Playing or GameState.Paused)
+        {
+            @foreach (var enemy in Engine.Enemies)
+            {
+                <EnemyView @key="enemy.Id" Enemy="@enemy" />
+            }
+        }
+
+        <!-- Boss Encounter View -->
+        @if (Engine.State is GameState.BossFight or GameState.Paused && Engine.CurrentBoss != null)
+        {
+            <BossView Boss="@Engine.CurrentBoss" />
+        }
+
+        <!-- Player Turret Defense Cannon at Bottom (50%, 92%) -->
+        <div class="absolute left-1/2 bottom-2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-20">
+            <!-- Active Target Lock Indicator Tag -->
+            @if (Engine.TargetEnemy != null && Engine.State == GameState.Playing)
+            {
+                <div class="mb-1 px-3 py-0.5 rounded bg-neon-cyan/20 border border-neon-cyan/60 text-neon-cyan text-[11px] font-orbitron font-bold tracking-widest uppercase flex items-center gap-1.5 shadow-[0_0_10px_rgba(0,240,255,0.4)]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-neon-cyan animate-ping"></span>
+                    LOCK: @Engine.TargetEnemy.Word
+                </div>
+            }
+
+            <!-- Turret Vector Cannon Graphic -->
+            <div class="relative w-16 h-12 flex items-center justify-center">
+                <svg viewBox="0 0 60 40" class="w-14 h-10 drop-shadow-[0_0_12px_rgba(0,240,255,0.8)]">
+                    <!-- Base Mount -->
+                    <polygon points="10,38 50,38 42,20 18,20" fill="#0b1329" stroke="#00f0ff" stroke-width="2" />
+                    <!-- Dual Plasma Barrels -->
+                    <rect x="22" y="6" width="4" height="18" fill="#00f0ff" stroke="#ffffff" stroke-width="1" />
+                    <rect x="34" y="6" width="4" height="18" fill="#00f0ff" stroke="#ffffff" stroke-width="1" />
+                    <!-- Cannon Pivot Core -->
+                    <circle cx="30" cy="22" r="6" fill="#122549" stroke="#00f0ff" stroke-width="2" />
+                    <circle cx="30" cy="22" r="3" fill="#ffffff" class="animate-pulse" />
+                </svg>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 3. Modals & State Overlays -->
+
+    <!-- Ready / Start / Difficulty Screen -->
+    @if (Engine.State == GameState.Ready)
+    {
+        <DifficultySelector SelectedMode="@Engine.Mode"
+                            SelectedDifficulty="@Engine.Difficulty"
+                            OnStart="@HandleStartGame" />
+    }
+
+    <!-- Paused Overlay -->
+    @if (Engine.State == GameState.Paused)
+    {
+        <div class="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm select-none">
+            <div class="bg-[#0b1021] border-2 border-neon-amber/70 rounded-2xl p-6 sm:p-8 max-w-sm w-full text-center shadow-[0_0_40px_rgba(255,183,3,0.3)] flex flex-col gap-4">
+                <span class="text-xs font-mono text-neon-amber uppercase tracking-widest font-bold">GAME PAUSED</span>
+                <h3 class="text-3xl font-black font-orbitron text-white">TACTICAL HOLD</h3>
+                <p class="text-xs text-slate-400 font-mono">Press Escape or click below to resume mission.</p>
+                <button type="button" @onclick="Engine.ResumeGame"
+                        class="w-full py-3 rounded-xl font-orbitron font-bold text-sm bg-neon-amber hover:bg-amber-400 text-slate-950 shadow-[0_0_15px_rgba(255,183,3,0.6)] uppercase transition-all">
+                    RESUME
+                </button>
+            </div>
+        </div>
+    }
+
+    <!-- Game Over Modal -->
+    @if (Engine.State == GameState.GameOver)
+    {
+        <GameOverModal Engine="@Engine"
+                       OnRestart="@HandleRestartGame"
+                       OnChangeDifficulty="@HandleReturnToMenu" />
+    }
+
+    <!-- Victory Modal -->
+    @if (Engine.State == GameState.Victory)
+    {
+        <VictoryModal Engine="@Engine"
+                      OnRestart="@HandleRestartGame"
+                      OnChangeDifficulty="@HandleReturnToMenu" />
+    }
+
+</div>
+
+@code {
+    private ElementReference _gameContainer;
+    private ElementReference _keystrokeInput;
+
+    protected override void OnInitialized()
+    {
+        Engine.StateChanged += HandleEngineStateChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await FocusInputAsync();
+        }
+    }
+
+    private void HandleEngineStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task FocusInputAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("focusElement", _keystrokeInput);
+        }
+        catch
+        {
+            // Focus fall-through
+        }
+    }
+
+    private async Task HandleStartGame((GameMode mode, Difficulty diff) selection)
+    {
+        await Engine.StartGameAsync(selection.mode, selection.diff);
+        await FocusInputAsync();
+    }
+
+    private async Task HandleRestartGame()
+    {
+        await Engine.StartGameAsync(Engine.Mode, Engine.Difficulty);
+        await FocusInputAsync();
+    }
+
+    private void HandleReturnToMenu()
+    {
+        // Cancel game and return to ready state
+        _ = Engine.DisposeAsync();
+        // Force refresh or restart in ready state
+        Engine.UntargetCurrentEnemy();
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        // 1. Handle Pause / Resume toggle via Escape
+        if (e.Key == "Escape")
+        {
+            if (Engine.State is GameState.Playing or GameState.BossFight)
+            {
+                Engine.PauseGame();
+            }
+            else if (Engine.State is GameState.Paused)
+            {
+                Engine.ResumeGame();
+            }
+            return;
+        }
+
+        // 2. Handle Target Release via Backspace
+        if (e.Key == "Backspace")
+        {
+            Engine.UntargetCurrentEnemy();
+            return;
+        }
+
+        // 3. Process alphanumeric and space keystrokes
+        if (e.Key.Length == 1)
+        {
+            char c = e.Key[0];
+            await Engine.HandleKeystrokeAsync(c);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        Engine.StateChanged -= HandleEngineStateChanged;
+        await Engine.DisposeAsync();
+    }
+}
