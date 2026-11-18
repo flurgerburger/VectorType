@@ -464,7 +464,12 @@ public class GameEngine : IAsyncDisposable
             return;
         }
 
-        // Standard Playing Mode:
+        // 3. Process alphanumeric and space keystrokes
+        if (char.IsWhiteSpace(inputChar))
+        {
+            await HandleEnterOrSpaceAsync(isEnter: false);
+            return;
+        }
         // 1. If we already have a locked target enemy:
         if (TargetEnemy != null && _enemies.Contains(TargetEnemy))
         {
@@ -494,6 +499,26 @@ public class GameEngine : IAsyncDisposable
         else
         {
             await RegisterFailedKeystrokeAsync();
+        }
+    }
+
+    public async Task HandleEnterOrSpaceAsync(bool isEnter)
+    {
+        if (State is not (GameState.Playing or GameState.BossFight))
+            return;
+
+        if (State == GameState.BossFight && CurrentBoss != null)
+        {
+            await ProcessBossKeystrokeAsync(' ');
+            return;
+        }
+
+        if (TargetEnemy != null && _enemies.Contains(TargetEnemy))
+        {
+            if (TargetEnemy.IsFullyTyped)
+            {
+                await HandleEnemyDestroyedAsync(TargetEnemy);
+            }
         }
     }
 

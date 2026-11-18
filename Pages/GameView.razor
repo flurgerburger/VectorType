@@ -212,7 +212,14 @@
             return;
         }
 
-        // 3. Process alphanumeric and space keystrokes
+        // 3. Handle Enter / Space
+        if (e.Key is "Enter" or " ")
+        {
+            await Engine.HandleEnterOrSpaceAsync(e.Key == "Enter");
+            return;
+        }
+
+        // 4. Process alphanumeric keystrokes
         if (e.Key.Length == 1)
         {
             char c = e.Key[0];
